@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScentAI — Your Personal Fragrance Advisor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #F7F3ED;
+            --bg-secondary: #EDE8DF;
+            --bg-card: #FFFFFF;
+            --bg-input: #FAF8F5;
+            --text-primary: #2C2416;
+            --text-secondary: #6B5D4D;
+            --text-muted: #9B8E7E;
+            --accent: #B8965A;
+            --accent-hover: #A37D42;
+            --accent-light: rgba(184, 150, 90, 0.12);
+            --border: #E2DCD3;
+            --border-light: #EDE8DF;
+            --shadow-sm: 0 1px 3px rgba(44, 36, 22, 0.06);
+            --shadow-md: 0 4px 16px rgba(44, 36, 22, 0.08);
+            --shadow-lg: 0 8px 32px rgba(44, 36, 22, 0.10);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ── NAV ── */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(247, 243, 237, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-light);
+            padding: 0 2rem;
+        }
+        .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+        .nav-logo {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+            letter-spacing: -0.02em;
+        }
+        .nav-logo span { color: var(--accent); }
+        .nav-links { display: flex; gap: 2rem; align-items: center; }
+        .nav-links a {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--accent); }
+        .nav-links a.active { color: var(--accent); }
+
+        /* ── HERO ── */
+        .hero {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem 3rem;
+            text-align: center;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 1rem;
+            background: var(--accent-light);
+            border: 1px solid rgba(184, 150, 90, 0.2);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1.5rem;
+        }
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            line-height: 1.1;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+        .hero h1 em {
+            font-style: italic;
+            color: var(--accent);
+        }
+        .hero p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            font-weight: 300;
+        }
+
+        /* ── MAIN LAYOUT ── */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem 4rem;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 2rem;
+        }
+
+        /* ── PREFERENCE SIDEBAR ── */
+        .preferences-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            box-shadow: var(--shadow-sm);
+            height: fit-content;
+            position: sticky;
+            top: 88px;
+        }
+        .preferences-panel h3 {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .preferences-panel .subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+        .pref-group { margin-bottom: 1.25rem; }
+        .pref-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        .pref-group select,
+        .pref-group input {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            font-size: 0.875rem;
+            font-family: var(--font-body);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .pref-group select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239B8E7E' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2rem;
+        }
+        .pref-group select:focus,
+        .pref-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+        .chip-group { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+        .chip {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8rem;
+            font-family: var(--font-body);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+        .chip:hover { border-color: var(--accent); color: var(--accent); }
+        .chip.selected {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* ── CHAT AREA ── */
+        .chat-area {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
+            overflow: hidden;
+        }
+        .chat-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .chat-header-text h4 {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .chat-header-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .message {
+            max-width: 85%;
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            animation: fadeInUp 0.3s ease-out;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message.assistant {
+            background: var(--bg-input);
+            border: 1px solid var(--border-light);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .message.user {
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .message h5 {
+            font-family: var(--font-display);
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .message ul { padding-left: 1.25rem; margin-top: 0.5rem; }
+        .message li { margin-bottom: 0.35rem; }
+        .message strong { font-weight: 600; }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 1rem 1.25rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+            max-width: 80px;
+        }
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: blink 1.4s infinite both;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0.3; }
+            40% { opacity: 1; }
+        }
+
+        /* ── INPUT BAR ── */
+        .chat-input-area {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            gap: 0.75rem;
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            font-family: var(--font-body);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .chat-input-area input::placeholder { color: var(--text-muted); }
+        .chat-input-area input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+        .send-btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            font-family: var(--font-body);
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s;
+        }
+        .send-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(184, 150, 90, 0.3);
+        }
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ── QUICK PROMPTS ── */
+        .quick-prompts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0 1.5rem 1rem;
+        }
+        .quick-prompt {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            font-family: var(--font-body);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+        .quick-prompt:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        /* ── FRAGRANCE CARD (in messages) ── */
+        .fragrance-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-top: 0.75rem;
+        }
+        .fragrance-card .name {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .fragrance-card .house {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+        .fragrance-card .notes-row {
+            display: flex;
+            gap: 0.375rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+        .fragrance-card .note-tag {
+            padding: 0.2rem 0.5rem;
+            font-size: 0.7rem;
+            background: var(--accent-light);
+            color: var(--accent);
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border-light);
+        }
+        footer a { color: var(--accent); text-decoration: none; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .main-container { grid-template-columns: 1fr; }
+            .preferences-panel { position: static; }
+            .nav-links { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-inner">
+        <a href="index.html" class="nav-logo">Scent<span>AI</span></a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="fragrance-ai.html" class="active">Fragrances</a>
+            <a href="car-ai.html">Cars</a>
+        </div>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="hero-badge">✦ AI-Powered Recommendations</div>
+    <h1>Find Your <em>Signature</em> Scent</h1>
+    <p>Tell us what you love — the occasion, the mood, the notes — and our AI will curate personalized fragrance recommendations from thousands of options.</p>
+</section>
+
+<div class="main-container">
+    <!-- Preference Sidebar -->
+    <aside class="preferences-panel">
+        <h3>Your Preferences</h3>
+        <p class="subtitle">Fine-tune your recommendations</p>
+
+        <div class="pref-group">
+            <label>Occasion</label>
+            <select id="occasion">
+                <option value="">Any occasion</option>
+                <option value="daily">Daily Wear</option>
+                <option value="date-night">Date Night</option>
+                <option value="office">Office / Professional</option>
+                <option value="special-event">Special Event</option>
+                <option value="casual">Casual / Weekend</option>
+                <option value="gym">Athletic / Gym</option>
+            </select>
+        </div>
+
+        <div class="pref-group">
+            <label>Season</label>
+            <select id="season">
+                <option value="">Any season</option>
+                <option value="spring">Spring</option>
+                <option value="summer">Summer</option>
+                <option value="fall">Fall</option>
+                <option value="winter">Winter</option>
+                <option value="year-round">Year-Round</option>
+            </select>
+        </div>
+
+        <div class="pref-group">
+            <label>Gender</label>
+            <select id="gender">
+                <option value="">No preference</option>
+                <option value="masculine">Masculine</option>
+                <option value="feminine">Feminine</option>
+                <option value="unisex">Unisex</option>
+            </select>
+        </div>
+
+        <div class="pref-group">
+            <label>Budget</label>
+            <select id="budget">
+                <option value="">Any price</option>
+                <option value="under-50">Under $50</option>
+                <option value="50-100">$50 – $100</option>
+                <option value="100-200">$100 – $200</option>
+                <option value="200-plus">$200+</option>
+            </select>
+        </div>
+
+        <div class="pref-group">
+            <label>Preferred Notes</label>
+            <div class="chip-group" id="notes-chips">
+                <button class="chip" data-note="woody">Woody</button>
+                <button class="chip" data-note="floral">Floral</button>
+                <button class="chip" data-note="citrus">Citrus</button>
+                <button class="chip" data-note="spicy">Spicy</button>
+                <button class="chip" data-note="fresh">Fresh</button>
+                <button class="chip" data-note="sweet">Sweet</button>
+                <button class="chip" data-note="musky">Musky</button>
+                <button class="chip" data-note="aquatic">Aquatic</button>
+                <button class="chip" data-note="vanilla">Vanilla</button>
+                <button class="chip" data-note="oud">Oud</button>
+                <button class="chip" data-note="amber">Amber</button>
+                <button class="chip" data-note="leather">Leather</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Chat Area -->
+    <main class="chat-area">
+        <div class="chat-header">
+            <div class="chat-avatar">✦</div>
+            <div class="chat-header-text">
+                <h4>ScentAI Advisor</h4>
+                <p>Powered by AI · Fragrance expertise at your fingertips</p>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+            <div class="message assistant">
+                <h5>Welcome to ScentAI</h5>
+                <p>I'm your personal fragrance advisor. I can help you discover new scents, compare fragrances, or find the perfect gift. Tell me what you're looking for, or try one of the prompts below to get started.</p>
+                <p style="margin-top: 0.5rem;">You can also refine your preferences using the panel on the left — I'll factor those into my recommendations.</p>
+            </div>
+        </div>
+
+        <div class="quick-prompts" id="quick-prompts">
+            <button class="quick-prompt" data-prompt="Recommend a long-lasting cologne for a first date">🌙 Date night fragrance</button>
+            <button class="quick-prompt" data-prompt="What's a good fresh summer fragrance under $100?">☀️ Fresh summer scent</button>
+            <button class="quick-prompt" data-prompt="Suggest a sophisticated office fragrance that isn't overpowering">💼 Office-friendly pick</button>
+            <button class="quick-prompt" data-prompt="What are the most popular niche fragrances right now?">🔥 Trending niche scents</button>
+            <button class="quick-prompt" data-prompt="I love Dior Sauvage, what else would I like?">❤️ Similar to my favorite</button>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="user-input" placeholder="Ask me anything about fragrances..." autocomplete="off">
+            <button class="send-btn" id="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+    </main>
+</div>
+
+<footer>
+    <p>ScentAI — Built by Ritam · <a href="index.html">Back to Home</a></p>
+</footer>
+
+<script>
+    // ── CONFIG ──
+    const API_BASE = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+        ? 'http://localhost:3000'
+        : '%%BACKEND_URL%%'; // Replace with your deployed backend URL
+
+    // ── STATE ──
+    let selectedNotes = [];
+    let conversationHistory = [];
+
+    // ── CHIP SELECTION ──
+    document.querySelectorAll('#notes-chips .chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const note = chip.dataset.note;
+            chip.classList.toggle('selected');
+            if (chip.classList.contains('selected')) {
+                selectedNotes.push(note);
+            } else {
+                selectedNotes = selectedNotes.filter(n => n !== note);
+            }
+        });
+    });
+
+    // ── QUICK PROMPTS ──
+    document.querySelectorAll('.quick-prompt').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('user-input').value = btn.dataset.prompt;
+            sendMessage();
+        });
+    });
+
+    // ── ENTER KEY ──
+    document.getElementById('user-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // ── GATHER PREFERENCES ──
+    function getPreferences() {
+        return {
+            occasion: document.getElementById('occasion').value,
+            season: document.getElementById('season').value,
+            gender: document.getElementById('gender').value,
+            budget: document.getElementById('budget').value,
+            preferredNotes: selectedNotes
+        };
+    }
+
+    // ── SEND MESSAGE ──
+    async function sendMessage() {
+        const input = document.getElementById('user-input');
+        const message = input.value.trim();
+        if (!message) return;
+
+        // Hide quick prompts after first message
+        document.getElementById('quick-prompts').style.display = 'none';
+
+        // Add user message to UI
+        appendMessage('user', message);
+        input.value = '';
+        input.disabled = true;
+        document.getElementById('send-btn').disabled = true;
+
+        // Show typing indicator
+        const typingEl = showTyping();
+
+        // Build request
+        const preferences = getPreferences();
+        conversationHistory.push({ role: 'user', content: message });
+
+        try {
+            const response = await fetch(`${API_BASE}/api/fragrance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message,
+                    preferences,
+                    history: conversationHistory.slice(-10)
+                })
+            });
+
+            if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+            const data = await response.json();
+            typingEl.remove();
+            appendMessage('assistant', data.reply);
+            conversationHistory.push({ role: 'assistant', content: data.reply });
+        } catch (err) {
+            typingEl.remove();
+            appendMessage('assistant', `I'm having trouble connecting to the server. Please make sure the backend is running at <strong>${API_BASE}</strong>.<br><br><em>Error: ${err.message}</em>`);
+        }
+
+        input.disabled = false;
+        document.getElementById('send-btn').disabled = false;
+        input.focus();
+    }
+
+    // ── APPEND MESSAGE ──
+    function appendMessage(role, content) {
+        const container = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.className = `message ${role}`;
+        div.innerHTML = formatMessage(content);
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // ── FORMAT MESSAGE (basic markdown-ish) ──
+    function formatMessage(text) {
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/^### (.+)$/gm, '<h5>$1</h5>')
+            .replace(/^- (.+)$/gm, '<li>$1</li>')
+            .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+            .replace(/\n/g, '<br>');
+    }
+
+    // ── TYPING INDICATOR ──
+    function showTyping() {
+        const container = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.className = 'typing-indicator';
+        div.innerHTML = '<span></span><span></span><span></span>';
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+        return div;
+    }
+</script>
+
+</body>
+</html>
