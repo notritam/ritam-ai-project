@@ -1,276 +1,478 @@
-// ─────────────────────────────────────────────────────────────
-//  Ritam AI — Backend Server
-//  Provides API endpoints for ScentAI and DriveIQ frontends
-//  Uses OpenAI API for intelligent recommendations
-// ─────────────────────────────────────────────────────────────
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ritam AI — Intelligent Tools for Smarter Decisions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const { OpenAI } = require('openai');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// ── Middleware ──
-app.use(cors({
-    origin: process.env.ALLOWED_ORIGINS
-        ? process.env.ALLOWED_ORIGINS.split(',')
-        : ['http://localhost:5500', 'http://127.0.0.1:5500', 'http://localhost:3000'],
-    methods: ['GET', 'POST'],
-    credentials: true
-}));
-app.use(express.json({ limit: '1mb' }));
-
-// ── OpenAI Client ──
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-});
-
-// ── Health Check ──
-app.get('/api/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        services: {
-            fragrance: 'active',
-            car: 'active'
-        }
-    });
-});
-
-
-// ═══════════════════════════════════════════════════════════════
-//  FRAGRANCE AI ENDPOINT
-// ═══════════════════════════════════════════════════════════════
-
-const FRAGRANCE_SYSTEM_PROMPT = `You are ScentAI, an expert fragrance advisor with deep knowledge of perfumery. You have extensive knowledge of fragrances from all major houses (Dior, Chanel, Tom Ford, Creed, Maison Francis Kurkdjian, Parfums de Marly, Nishane, Xerjoff, etc.) as well as affordable options (Zara, Lattafa, Armaf, Al Rehab, etc.).
-
-Your expertise includes:
-- Fragrance families and note pyramids (top, heart, base notes)
-- Longevity and projection characteristics
-- Seasonal and occasion appropriateness
-- Clone/dupe recommendations for expensive fragrances
-- Layering combinations
-- Price-to-value analysis
-- Current trending fragrances and new releases
-
-Guidelines for responses:
-1. Always provide SPECIFIC fragrance names with the house/brand
-2. Include key notes when recommending a fragrance
-3. Mention approximate price ranges when relevant
-4. Suggest 3-5 options at different price points when asked for recommendations
-5. If the user mentions a fragrance they like, suggest similar options AND complementary alternatives
-6. Use formatting: **bold** for fragrance names, bullet points for lists
-7. Be conversational and passionate about fragrances — you love this stuff
-8. When you know a great affordable clone/dupe, mention it
-9. Consider the user's stated preferences (occasion, season, budget, notes) in every response
-10. Reference real fragrance data — note pyramids, longevity reports, community ratings`;
-
-app.post('/api/fragrance', async (req, res) => {
-    try {
-        const { message, preferences, history = [] } = req.body;
-
-        if (!message) {
-            return res.status(400).json({ error: 'Message is required' });
+        :root {
+            --bg: #0C0C12;
+            --bg-card-scent: #FAF7F2;
+            --bg-card-car: #12121B;
+            --text-primary: #EAEAF0;
+            --text-dark: #2C2416;
+            --text-secondary: #9D9DB5;
+            --text-muted-dark: #6B5D4D;
+            --accent-scent: #B8965A;
+            --accent-car: #3B82F6;
+            --border-light: #1E1E2E;
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-serif: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
         }
 
-        // Build context from preferences
-        let prefContext = '';
-        if (preferences) {
-            const parts = [];
-            if (preferences.occasion) parts.push(`Occasion: ${preferences.occasion}`);
-            if (preferences.season) parts.push(`Season: ${preferences.season}`);
-            if (preferences.gender) parts.push(`Gender preference: ${preferences.gender}`);
-            if (preferences.budget) parts.push(`Budget: ${preferences.budget}`);
-            if (preferences.preferredNotes?.length > 0) {
-                parts.push(`Preferred notes: ${preferences.preferredNotes.join(', ')}`);
-            }
-            if (parts.length > 0) {
-                prefContext = `\n\n[User preferences: ${parts.join(' | ')}]`;
-            }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        // Build message history for context
-        const messages = [
-            { role: 'system', content: FRAGRANCE_SYSTEM_PROMPT + prefContext }
-        ];
-
-        // Add conversation history (last 10 messages)
-        for (const msg of history.slice(-10)) {
-            messages.push({
-                role: msg.role,
-                content: msg.content
-            });
+        /* ── AMBIENT GLOW ── */
+        .ambient {
+            position: fixed;
+            top: -30%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 600px;
+            background: radial-gradient(ellipse, rgba(59, 130, 246, 0.06) 0%, rgba(184, 150, 90, 0.04) 40%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
         }
 
-        // Add current message if not already in history
-        if (!history.length || history[history.length - 1]?.content !== message) {
-            messages.push({ role: 'user', content: message });
+        /* ── NAV ── */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(12, 12, 18, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-light);
+            padding: 0 2rem;
+        }
+        .nav-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+        .nav-logo {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+            letter-spacing: -0.03em;
+        }
+        .nav-logo .r { color: var(--accent-car); }
+        .nav-logo .dot { color: var(--accent-scent); }
+        .nav-links { display: flex; gap: 2rem; align-items: center; }
+        .nav-links a {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: #fff; }
+
+        /* ── HERO ── */
+        .hero {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 6rem 2rem 4rem;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-eyebrow {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+        }
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2.8rem, 6vw, 4.5rem);
+            font-weight: 700;
+            line-height: 1.08;
+            letter-spacing: -0.04em;
+            margin-bottom: 1.25rem;
+        }
+        .hero h1 .line2 {
+            display: block;
+            background: linear-gradient(135deg, var(--accent-scent), var(--accent-car));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            max-width: 560px;
+            margin: 0 auto;
         }
 
-        const completion = await openai.chat.completions.create({
-            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-            messages,
-            temperature: 0.8,
-            max_tokens: 1000
-        });
-
-        const reply = completion.choices[0]?.message?.content || 'I couldn\'t generate a response. Please try again.';
-
-        res.json({ reply });
-
-    } catch (error) {
-        console.error('[Fragrance API Error]', error.message);
-
-        if (error.status === 401) {
-            return res.status(500).json({
-                error: 'Invalid API key. Check your OPENAI_API_KEY in .env'
-            });
-        }
-        if (error.status === 429) {
-            return res.status(429).json({
-                error: 'Rate limit exceeded. Please wait a moment and try again.'
-            });
+        /* ── CARDS GRID ── */
+        .cards-section {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem 6rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            position: relative;
+            z-index: 1;
         }
 
-        res.status(500).json({
-            error: 'Something went wrong with the fragrance advisor.',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
-    }
-});
-
-
-// ═══════════════════════════════════════════════════════════════
-//  CAR DEAL AI ENDPOINT
-// ═══════════════════════════════════════════════════════════════
-
-const CAR_SYSTEM_PROMPT = `You are DriveIQ, an expert car deal analyst and negotiation coach. You combine the knowledge of a seasoned car buyer, a dealership finance manager, and a consumer advocate.
-
-Your expertise includes:
-- Fair market values for new and used vehicles (based on KBB, Edmunds, NADA ranges)
-- Depreciation curves and when cars hit their value sweet spots
-- Common dealership tactics and how to counter them
-- Detailed negotiation scripts buyers can use word-for-word
-- Hidden fees and add-ons to watch for (dealer prep, VIN etching, paint protection, extended warranties)
-- Reliability ratings and known issues by make/model/year
-- Total cost of ownership (insurance, maintenance, fuel)
-- When to walk away from a deal
-- Trade-in value optimization
-
-Guidelines for responses:
-1. When analyzing a specific car deal, always provide:
-   - A deal verdict: **Great Deal**, **Good Deal**, **Fair Deal**, **Below Average**, or **Bad Deal**
-   - Estimated fair market value range
-   - Specific reasons why it's good or bad
-   - 3-5 negotiation tactics specific to that vehicle
-2. Use formatting: **bold** for key terms, bullet points for lists, ### for section headers
-3. Be direct and confident — users are counting on your honesty
-4. When suggesting negotiation tactics, provide actual phrases/scripts they can say
-5. Always mention potential red flags (rebuilt title, flood damage, high mileage for year, etc.)
-6. Consider the user's priorities (reliability, fuel economy, performance, etc.)
-7. If a deal seems too good to be true, say so and explain why
-8. Reference real-world data points — reliability rankings, depreciation rates, common issues
-9. Tone: Professional but approachable. Think trusted friend who happens to be a car expert.
-10. Never sugarcoat a bad deal — the user needs to know the truth`;
-
-app.post('/api/car', async (req, res) => {
-    try {
-        const { message, carDetails, history = [] } = req.body;
-
-        if (!message) {
-            return res.status(400).json({ error: 'Message is required' });
+        .tool-card {
+            border-radius: 24px;
+            padding: 3rem 2.5rem 2.5rem;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .tool-card:hover {
+            transform: translateY(-6px);
         }
 
-        // Build context from car details
-        let carContext = '';
-        if (carDetails) {
-            const parts = [];
-            if (carDetails.make) parts.push(`Make: ${carDetails.make}`);
-            if (carDetails.model) parts.push(`Model: ${carDetails.model}`);
-            if (carDetails.year) parts.push(`Year: ${carDetails.year}`);
-            if (carDetails.mileage) parts.push(`Mileage: ${Number(carDetails.mileage).toLocaleString()}`);
-            if (carDetails.price) parts.push(`Asking price: $${Number(carDetails.price).toLocaleString()}`);
-            if (carDetails.condition) parts.push(`Condition: ${carDetails.condition}`);
-            if (carDetails.priorities?.length > 0) {
-                parts.push(`Buyer priorities: ${carDetails.priorities.join(', ')}`);
-            }
-            if (parts.length > 0) {
-                carContext = `\n\n[Vehicle details provided: ${parts.join(' | ')}]`;
-            }
+        /* ── SCENT CARD ── */
+        .card-scent {
+            background: var(--bg-card-scent);
+            color: var(--text-dark);
+            border: 1px solid #E2DCD3;
+        }
+        .card-scent:hover {
+            box-shadow: 0 20px 60px rgba(184, 150, 90, 0.15);
+        }
+        .card-scent .card-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--accent-scent), #C9A96E);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.75rem;
+        }
+        .card-scent .card-title {
+            font-family: var(--font-serif);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+        .card-scent .card-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted-dark);
+            margin-bottom: 2rem;
+            flex: 1;
+        }
+        .card-scent .card-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        .card-scent .feature-tag {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: rgba(184, 150, 90, 0.1);
+            color: var(--accent-scent);
+            border-radius: 100px;
+            border: 1px solid rgba(184, 150, 90, 0.15);
+        }
+        .card-scent .card-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-scent);
+            transition: gap 0.2s;
+        }
+        .card-scent:hover .card-cta { gap: 0.75rem; }
+
+        /* ── CAR CARD ── */
+        .card-car {
+            background: var(--bg-card-car);
+            color: var(--text-primary);
+            border: 1px solid var(--border-light);
+        }
+        .card-car:hover {
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.1), 0 0 40px rgba(59, 130, 246, 0.05);
+        }
+        .card-car .card-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--accent-car), #818CF8);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.75rem;
+            box-shadow: 0 0 24px rgba(59, 130, 246, 0.2);
+        }
+        .card-car .card-title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+        .card-car .card-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            flex: 1;
+        }
+        .card-car .card-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        .card-car .feature-tag {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: rgba(59, 130, 246, 0.08);
+            color: var(--accent-car);
+            border-radius: 100px;
+            border: 1px solid rgba(59, 130, 246, 0.15);
+        }
+        .card-car .card-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-car);
+            transition: gap 0.2s;
+        }
+        .card-car:hover .card-cta { gap: 0.75rem; }
+
+        /* ── HOW IT WORKS ── */
+        .how-section {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 2rem 5rem;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .how-section h2 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+        .how-section .how-sub {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 3rem;
+        }
+        .steps-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+        .step {
+            text-align: center;
+        }
+        .step-number {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(184, 150, 90, 0.1));
+            border: 1px solid var(--border-light);
+            color: var(--text-primary);
+        }
+        .step h4 {
+            font-family: var(--font-display);
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 0.375rem;
+        }
+        .step p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
         }
 
-        // Build message history
-        const messages = [
-            { role: 'system', content: CAR_SYSTEM_PROMPT + carContext }
-        ];
-
-        for (const msg of history.slice(-10)) {
-            messages.push({
-                role: msg.role,
-                content: msg.content
-            });
+        /* ── TECH STRIP ── */
+        .tech-strip {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem 5rem;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .tech-strip p {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+            font-weight: 500;
+        }
+        .tech-logos {
+            display: flex;
+            justify-content: center;
+            gap: 2.5rem;
+            flex-wrap: wrap;
+        }
+        .tech-tag {
+            padding: 0.5rem 1.25rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
         }
 
-        if (!history.length || history[history.length - 1]?.content !== message) {
-            messages.push({ role: 'user', content: message });
+        /* ── FOOTER ── */
+        footer {
+            text-align: center;
+            padding: 2.5rem 2rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border-light);
+            position: relative;
+            z-index: 1;
         }
+        footer strong { color: var(--text-primary); font-weight: 600; }
+        footer a { color: var(--accent-car); text-decoration: none; }
 
-        const completion = await openai.chat.completions.create({
-            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-            messages,
-            temperature: 0.7,
-            max_tokens: 1200
-        });
-
-        const reply = completion.choices[0]?.message?.content || 'I couldn\'t generate a response. Please try again.';
-
-        res.json({ reply });
-
-    } catch (error) {
-        console.error('[Car API Error]', error.message);
-
-        if (error.status === 401) {
-            return res.status(500).json({
-                error: 'Invalid API key. Check your OPENAI_API_KEY in .env'
-            });
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .cards-section { grid-template-columns: 1fr; }
+            .steps-row { grid-template-columns: 1fr; gap: 1.5rem; }
+            .nav-links { display: none; }
+            .hero { padding: 4rem 1.5rem 3rem; }
         }
-        if (error.status === 429) {
-            return res.status(429).json({
-                error: 'Rate limit exceeded. Please wait a moment and try again.'
-            });
-        }
+    </style>
+</head>
+<body>
 
-        res.status(500).json({
-            error: 'Something went wrong with the car advisor.',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
-    }
-});
+<div class="ambient"></div>
 
+<nav>
+    <div class="nav-inner">
+        <a href="index.html" class="nav-logo"><span class="r">Ritam</span><span class="dot">.</span>AI</a>
+        <div class="nav-links">
+            <a href="fragrance-ai.html">Fragrance AI</a>
+            <a href="car-ai.html">Car AI</a>
+        </div>
+    </div>
+</nav>
 
-// ═══════════════════════════════════════════════════════════════
-//  START SERVER
-// ═══════════════════════════════════════════════════════════════
+<section class="hero">
+    <p class="hero-eyebrow">AI-Powered Decision Tools</p>
+    <h1>
+        Make Smarter Choices,
+        <span class="line2">Effortlessly.</span>
+    </h1>
+    <p>Two specialized AI advisors — one for discovering your perfect fragrance, another for never overpaying on a car. Built with real data, designed for real people.</p>
+</section>
 
-app.listen(PORT, () => {
-    console.log(`
-╔══════════════════════════════════════════════════╗
-║            Ritam AI — Backend Server             ║
-╠══════════════════════════════════════════════════╣
-║  Status:    Running                              ║
-║  Port:      ${String(PORT).padEnd(37)}║
-║  Endpoints:                                      ║
-║    POST /api/fragrance  →  ScentAI advisor       ║
-║    POST /api/car        →  DriveIQ advisor       ║
-║    GET  /api/health     →  Status check          ║
-╚══════════════════════════════════════════════════╝
-    `);
+<section class="cards-section">
+    <!-- Fragrance Card -->
+    <a href="fragrance-ai.html" class="tool-card card-scent">
+        <div class="card-icon">✦</div>
+        <h2 class="card-title">ScentAI</h2>
+        <p class="card-desc">Your personal fragrance advisor. Get curated recommendations based on your preferences, occasion, and favorite notes — backed by real fragrance data from across the web.</p>
+        <div class="card-features">
+            <span class="feature-tag">Personalized Picks</span>
+            <span class="feature-tag">Note Matching</span>
+            <span class="feature-tag">Budget Aware</span>
+            <span class="feature-tag">Seasonal Recs</span>
+        </div>
+        <div class="card-cta">Explore Fragrances <span>→</span></div>
+    </a>
 
-    if (!process.env.OPENAI_API_KEY) {
-        console.warn('⚠️  WARNING: OPENAI_API_KEY is not set in .env file.');
-        console.warn('   The AI endpoints will fail without a valid API key.');
-        console.warn('   Copy .env.example to .env and add your key.\n');
-    }
-});
+    <!-- Car Card -->
+    <a href="car-ai.html" class="tool-card card-car">
+        <div class="card-icon">⚡</div>
+        <h2 class="card-title">DriveIQ</h2>
+        <p class="card-desc">Your car deal analyst. Enter any vehicle listing and get an instant verdict — fair market value, deal rating, red flags, and word-for-word negotiation scripts to use at the dealership.</p>
+        <div class="card-features">
+            <span class="feature-tag">Deal Analysis</span>
+            <span class="feature-tag">Negotiation Tactics</span>
+            <span class="feature-tag">Market Data</span>
+            <span class="feature-tag">Red Flag Alerts</span>
+        </div>
+        <div class="card-cta">Analyze a Deal <span>→</span></div>
+    </a>
+</section>
+
+<section class="how-section">
+    <h2>How It Works</h2>
+    <p class="how-sub">Simple, conversational, and built to save you time and money.</p>
+    <div class="steps-row">
+        <div class="step">
+            <div class="step-number">1</div>
+            <h4>Tell Us What You Want</h4>
+            <p>Describe what you're looking for in plain language — no forms or jargon needed.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <h4>AI Analyzes the Data</h4>
+            <p>Our backend pulls real-time data and cross-references it with expert knowledge.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <h4>Get Actionable Advice</h4>
+            <p>Receive specific recommendations, deal verdicts, or negotiation scripts you can use immediately.</p>
+        </div>
+    </div>
+</section>
+
+<section class="tech-strip">
+    <p>Built With</p>
+    <div class="tech-logos">
+        <span class="tech-tag">Node.js</span>
+        <span class="tech-tag">Express</span>
+        <span class="tech-tag">OpenAI API</span>
+        <span class="tech-tag">Vanilla JS</span>
+        <span class="tech-tag">GitHub Pages</span>
+    </div>
+</section>
+
+<footer>
+    <p>Built by <strong>Ritam</strong> · 2026 · <a href="https://github.com/ritam" target="_blank">GitHub</a></p>
+</footer>
+
+</body>
+</html>
