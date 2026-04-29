@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DriveIQ — AI-Powered Car Deal Advisor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0A0A0F;
+            --bg-secondary: #111118;
+            --bg-card: #16161F;
+            --bg-input: #1C1C28;
+            --bg-elevated: #1F1F2C;
+            --text-primary: #EAEAF0;
+            --text-secondary: #9D9DB5;
+            --text-muted: #5E5E78;
+            --accent: #3B82F6;
+            --accent-hover: #2563EB;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --accent-light: rgba(59, 130, 246, 0.08);
+            --green: #10B981;
+            --green-glow: rgba(16, 185, 129, 0.12);
+            --red: #EF4444;
+            --amber: #F59E0B;
+            --border: #252535;
+            --border-light: #1E1E2E;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 30px rgba(59, 130, 246, 0.1);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ── SUBTLE GRID OVERLAY ── */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                linear-gradient(rgba(59, 130, 246, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── NAV ── */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+        }
+        .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+        .nav-logo {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+            letter-spacing: -0.03em;
+        }
+        .nav-logo span { color: var(--accent); }
+        .nav-links { display: flex; gap: 2rem; align-items: center; }
+        .nav-links a {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--accent); }
+        .nav-links a.active { color: var(--accent); }
+
+        /* ── HERO ── */
+        .hero {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem 3rem;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 1rem;
+            background: var(--accent-light);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1.5rem;
+        }
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            line-height: 1.1;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            letter-spacing: -0.03em;
+        }
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, var(--accent), #818CF8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            max-width: 620px;
+            margin: 0 auto 2rem;
+            font-weight: 300;
+        }
+
+        /* ── MAIN LAYOUT ── */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem 4rem;
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── CAR DETAIL SIDEBAR ── */
+        .detail-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            box-shadow: var(--shadow-sm);
+            height: fit-content;
+            position: sticky;
+            top: 88px;
+        }
+        .detail-panel h3 {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .detail-panel .subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+        .pref-group { margin-bottom: 1.25rem; }
+        .pref-group label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        .pref-group select,
+        .pref-group input[type="text"],
+        .pref-group input[type="number"] {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            font-size: 0.875rem;
+            font-family: var(--font-body);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .pref-group select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235E5E78' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2rem;
+        }
+        .pref-group input::placeholder { color: var(--text-muted); }
+        .pref-group select:focus,
+        .pref-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+        .analyze-btn {
+            width: 100%;
+            margin-top: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            font-family: var(--font-body);
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .analyze-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+        .analyze-btn:hover::before { left: 100%; }
+        .analyze-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.35);
+        }
+        .analyze-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ── PRIORITY CHIPS ── */
+        .chip-group { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+        .chip {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            font-family: var(--font-body);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+        .chip:hover { border-color: var(--accent); color: var(--accent); }
+        .chip.selected {
+            background: var(--accent-glow);
+            border-color: var(--accent);
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* ── CHAT AREA ── */
+        .chat-area {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
+            overflow: hidden;
+        }
+        .chat-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), #818CF8);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            box-shadow: var(--shadow-glow);
+        }
+        .chat-header-text h4 {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .chat-header-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .status-dot {
+            display: inline-block;
+            width: 6px; height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            margin-right: 4px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Scrollbar styling */
+        .chat-messages::-webkit-scrollbar { width: 6px; }
+        .chat-messages::-webkit-scrollbar-track { background: transparent; }
+        .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .message {
+            max-width: 85%;
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            animation: fadeInUp 0.3s ease-out;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message.assistant {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .message.user {
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .message h5 {
+            font-family: var(--font-display);
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .message ul { padding-left: 1.25rem; margin-top: 0.5rem; }
+        .message li { margin-bottom: 0.35rem; }
+        .message strong { font-weight: 600; }
+
+        /* ── DEAL VERDICT BADGE ── */
+        .deal-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .deal-badge.great {
+            background: var(--green-glow);
+            color: var(--green);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .deal-badge.fair {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--amber);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        .deal-badge.bad {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--red);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 1rem 1.25rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+            max-width: 80px;
+        }
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: blink 1.4s infinite both;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0.3; }
+            40% { opacity: 1; }
+        }
+
+        /* ── INPUT BAR ── */
+        .chat-input-area {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.75rem;
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            font-family: var(--font-body);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .chat-input-area input::placeholder { color: var(--text-muted); }
+        .chat-input-area input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        .send-btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            font-family: var(--font-body);
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s;
+        }
+        .send-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+        }
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ── QUICK PROMPTS ── */
+        .quick-prompts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0 1.5rem 1rem;
+        }
+        .quick-prompt {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            font-family: var(--font-body);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+        .quick-prompt:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+            position: relative;
+            z-index: 1;
+        }
+        footer a { color: var(--accent); text-decoration: none; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .main-container { grid-template-columns: 1fr; }
+            .detail-panel { position: static; }
+            .nav-links { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-inner">
+        <a href="index.html" class="nav-logo">Drive<span>IQ</span></a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="fragrance-ai.html">Fragrances</a>
+            <a href="car-ai.html" class="active">Cars</a>
+        </div>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="hero-badge">⚡ Real-Time Market Intelligence</div>
+    <h1>Never Overpay for <span class="gradient-text">Your Next Car</span></h1>
+    <p>Enter any vehicle's details and get an instant AI analysis — fair market value, deal rating, hidden red flags, and proven negotiation tactics to save thousands.</p>
+</section>
+
+<div class="main-container">
+    <!-- Car Detail Sidebar -->
+    <aside class="detail-panel">
+        <h3>Vehicle Details</h3>
+        <p class="subtitle">Enter a car to analyze</p>
+
+        <div class="pref-group">
+            <label>Make</label>
+            <select id="car-make">
+                <option value="">Select make</option>
+                <option value="Toyota">Toyota</option>
+                <option value="Honda">Honda</option>
+                <option value="Ford">Ford</option>
+                <option value="Chevrolet">Chevrolet</option>
+                <option value="BMW">BMW</option>
+                <option value="Mercedes-Benz">Mercedes-Benz</option>
+                <option value="Audi">Audi</option>
+                <option value="Tesla">Tesla</option>
+                <option value="Hyundai">Hyundai</option>
+                <option value="Kia">Kia</option>
+                <option value="Nissan">Nissan</option>
+                <option value="Subaru">Subaru</option>
+                <option value="Volkswagen">Volkswagen</option>
+                <option value="Lexus">Lexus</option>
+                <option value="Mazda">Mazda</option>
+                <option value="Porsche">Porsche</option>
+                <option value="Dodge">Dodge</option>
+                <option value="Jeep">Jeep</option>
+                <option value="Ram">Ram</option>
+                <option value="GMC">GMC</option>
+            </select>
+        </div>
+
+        <div class="pref-group">
+            <label>Model</label>
+            <input type="text" id="car-model" placeholder="e.g. Camry, Civic, Model 3">
+        </div>
+
+        <div class="row-2">
+            <div class="pref-group">
+                <label>Year</label>
+                <input type="number" id="car-year" placeholder="2023" min="1990" max="2027">
+            </div>
+            <div class="pref-group">
+                <label>Mileage</label>
+                <input type="number" id="car-mileage" placeholder="35000">
+            </div>
+        </div>
+
+        <div class="pref-group">
+            <label>Asking Price ($)</label>
+            <input type="number" id="car-price" placeholder="28000">
+        </div>
+
+        <div class="pref-group">
+            <label>Condition</label>
+            <select id="car-condition">
+                <option value="">Select condition</option>
+                <option value="new">New</option>
+                <option value="like-new">Like New / CPO</option>
+                <option value="excellent">Excellent</option>
+                <option value="good">Good</option>
+                <option value="fair">Fair</option>
+                <option value="poor">Poor / Needs Work</option>
+            </select>
+        </div>
+
+        <div class="pref-group">
+            <label>What matters most?</label>
+            <div class="chip-group" id="priority-chips">
+                <button class="chip" data-priority="reliability">Reliability</button>
+                <button class="chip" data-priority="fuel-economy">Fuel Economy</button>
+                <button class="chip" data-priority="performance">Performance</button>
+                <button class="chip" data-priority="safety">Safety</button>
+                <button class="chip" data-priority="resale">Resale Value</button>
+                <button class="chip" data-priority="tech">Tech & Features</button>
+            </div>
+        </div>
+
+        <button class="analyze-btn" id="analyze-btn" onclick="analyzeFromSidebar()">⚡ Analyze This Deal</button>
+    </aside>
+
+    <!-- Chat Area -->
+    <main class="chat-area">
+        <div class="chat-header">
+            <div class="chat-avatar">⚡</div>
+            <div class="chat-header-text">
+                <h4>DriveIQ Advisor</h4>
+                <p><span class="status-dot"></span>Online · Market data updated in real-time</p>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+            <div class="message assistant">
+                <h5>Ready to find your best deal</h5>
+                <p>I analyze car listings to tell you if you're getting a fair price, spot potential issues, and give you specific negotiation strategies to use at the dealership.</p>
+                <p style="margin-top: 0.5rem;"><strong>Two ways to use me:</strong></p>
+                <ul>
+                    <li>Fill in the vehicle details on the left and click <strong>Analyze This Deal</strong></li>
+                    <li>Or just describe a car you're looking at in the chat below</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="quick-prompts" id="quick-prompts">
+            <button class="quick-prompt" data-prompt="Is a 2022 Honda Civic with 30k miles for $22,000 a good deal?">🚗 Analyze a Civic deal</button>
+            <button class="quick-prompt" data-prompt="What negotiation tactics work best at dealerships?">💬 Negotiation tips</button>
+            <button class="quick-prompt" data-prompt="What are the most reliable used cars under $25,000 right now?">🏆 Best reliable used cars</button>
+            <button class="quick-prompt" data-prompt="Should I buy new or used in 2026?">📊 New vs. Used analysis</button>
+            <button class="quick-prompt" data-prompt="What hidden fees do dealerships add and how do I avoid them?">⚠️ Hidden fees to watch for</button>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="user-input" placeholder="Describe a car deal or ask me anything..." autocomplete="off">
+            <button class="send-btn" id="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+    </main>
+</div>
+
+<footer>
+    <p>DriveIQ — Built by Ritam · <a href="index.html">Back to Home</a></p>
+</footer>
+
+<script>
+    // ── CONFIG ──
+    const API_BASE = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+        ? 'http://localhost:3000'
+        : '%%BACKEND_URL%%'; // Replace with your deployed backend URL
+
+    // ── STATE ──
+    let selectedPriorities = [];
+    let conversationHistory = [];
+
+    // ── CHIP SELECTION ──
+    document.querySelectorAll('#priority-chips .chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const priority = chip.dataset.priority;
+            chip.classList.toggle('selected');
+            if (chip.classList.contains('selected')) {
+                selectedPriorities.push(priority);
+            } else {
+                selectedPriorities = selectedPriorities.filter(p => p !== priority);
+            }
+        });
+    });
+
+    // ── QUICK PROMPTS ──
+    document.querySelectorAll('.quick-prompt').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('user-input').value = btn.dataset.prompt;
+            sendMessage();
+        });
+    });
+
+    // ── ENTER KEY ──
+    document.getElementById('user-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // ── ANALYZE FROM SIDEBAR ──
+    function analyzeFromSidebar() {
+        const make = document.getElementById('car-make').value;
+        const model = document.getElementById('car-model').value;
+        const year = document.getElementById('car-year').value;
+        const mileage = document.getElementById('car-mileage').value;
+        const price = document.getElementById('car-price').value;
+        const condition = document.getElementById('car-condition').value;
+
+        if (!make || !model) {
+            alert('Please enter at least the make and model.');
+            return;
+        }
+
+        let prompt = `Analyze this car deal: ${year || 'Unknown year'} ${make} ${model}`;
+        if (mileage) prompt += ` with ${Number(mileage).toLocaleString()} miles`;
+        if (price) prompt += ` listed at $${Number(price).toLocaleString()}`;
+        if (condition) prompt += ` in ${condition} condition`;
+        prompt += `. Is this a good deal? What should I negotiate?`;
+
+        document.getElementById('user-input').value = prompt;
+        sendMessage();
+    }
+
+    // ── GATHER CAR DETAILS ──
+    function getCarDetails() {
+        return {
+            make: document.getElementById('car-make').value,
+            model: document.getElementById('car-model').value,
+            year: document.getElementById('car-year').value,
+            mileage: document.getElementById('car-mileage').value,
+            price: document.getElementById('car-price').value,
+            condition: document.getElementById('car-condition').value,
+            priorities: selectedPriorities
+        };
+    }
+
+    // ── SEND MESSAGE ──
+    async function sendMessage() {
+        const input = document.getElementById('user-input');
+        const message = input.value.trim();
+        if (!message) return;
+
+        // Hide quick prompts after first message
+        document.getElementById('quick-prompts').style.display = 'none';
+
+        // Add user message to UI
+        appendMessage('user', message);
+        input.value = '';
+        input.disabled = true;
+        document.getElementById('send-btn').disabled = true;
+        document.getElementById('analyze-btn').disabled = true;
+
+        // Show typing indicator
+        const typingEl = showTyping();
+
+        // Build request
+        const carDetails = getCarDetails();
+        conversationHistory.push({ role: 'user', content: message });
+
+        try {
+            const response = await fetch(`${API_BASE}/api/car`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message,
+                    carDetails,
+                    history: conversationHistory.slice(-10)
+                })
+            });
+
+            if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+            const data = await response.json();
+            typingEl.remove();
+            appendMessage('assistant', data.reply);
+            conversationHistory.push({ role: 'assistant', content: data.reply });
+        } catch (err) {
+            typingEl.remove();
+            appendMessage('assistant', `I'm having trouble connecting to the server. Please make sure the backend is running at <strong>${API_BASE}</strong>.<br><br><em>Error: ${err.message}</em>`);
+        }
+
+        input.disabled = false;
+        document.getElementById('send-btn').disabled = false;
+        document.getElementById('analyze-btn').disabled = false;
+        input.focus();
+    }
+
+    // ── APPEND MESSAGE ──
+    function appendMessage(role, content) {
+        const container = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.className = `message ${role}`;
+        div.innerHTML = formatMessage(content);
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // ── FORMAT MESSAGE ──
+    function formatMessage(text) {
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/^### (.+)$/gm, '<h5>$1</h5>')
+            .replace(/^- (.+)$/gm, '<li>$1</li>')
+            .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+            .replace(/\n/g, '<br>');
+    }
+
+    // ── TYPING INDICATOR ──
+    function showTyping() {
+        const container = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.className = 'typing-indicator';
+        div.innerHTML = '<span></span><span></span><span></span>';
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+        return div;
+    }
+</script>
+
+</body>
+</html>
